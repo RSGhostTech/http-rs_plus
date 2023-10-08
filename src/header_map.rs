@@ -1,6 +1,5 @@
 use std::cell::RefCell;
 use std::collections::HashMap;
-use std::hash::Hash;
 
 pub type HeaderMapKey = String;
 pub type HeaderMapValue = String;
@@ -103,7 +102,7 @@ pub trait HeaderMappingType {
     fn parse_key_value(&self) -> HeaderMappingResult<(HeaderMapKey,HeaderMapValue)>;
 }
 
-impl HeaderMappingType for &[u8] {
+impl HeaderMappingType for [u8] {
     fn parse_key_value(&self) -> HeaderMappingResult<(HeaderMapKey, HeaderMapValue)> {
         if self.is_empty() {
             return Err(HeaderMappingError::EmptyRaw)

@@ -1,6 +1,7 @@
 use crate::header::version::HTTPVersion;
 use crate::header_map::HeaderMap;
 use crate::prelude::HeaderMappingType;
+
 pub mod server;
 pub mod client;
 #[derive(Clone,Debug)]
@@ -79,17 +80,52 @@ impl ResponseBuilder{
         this
     }
     
-    pub fn body(self,body:Vec<u8>) -> Self{
-        let mut this = self;
-        this.body = Some(body);
-        this
-    }
-    
     pub fn build(self) -> Response{
         let version = self.version.unwrap_or(HTTPVersion::HTTP1_1);
         let header = self.header.unwrap_or_default();
         let body = self.body.unwrap_or_default();
         
         Response::new(version,header,body)
+    }
+}
+
+pub trait HTTPBodyTypes{
+    fn vec_u8(&self) -> Vec<u8>;
+}
+
+impl HTTPBodyTypes for String{
+    fn vec_u8(&self) -> Vec<u8> {
+        self.bytes()
+            .collect()
+    }
+}
+
+impl HTTPBodyTypes for &str{
+    fn vec_u8(&self) -> Vec<u8> {
+        self.bytes()
+            .collect()
+    }
+}
+
+impl HTTPBodyTypes for [u8]{
+    fn vec_u8(&self) -> Vec<u8> {
+        self.to_vec()
+    }
+}
+
+impl HTTPBodyTypes for Vec<u8>{
+    fn vec_u8(&self) -> Vec<u8> {
+        self.clone()
+    }
+}
+
+impl ResponseBuilder {
+    pub fn body<T>(self,body:T) -> Self
+    where
+        T:HTTPBodyTypes
+    {
+        let mut this = self;
+        this.body = Some(body.vec_u8());
+        this
     }
 }
