@@ -89,31 +89,31 @@ impl ResponseBuilder{
     }
 }
 
-pub trait HTTPBodyTypes{
+pub trait HTTPBytes {
     fn vec_u8(&self) -> Vec<u8>;
 }
 
-impl HTTPBodyTypes for String{
+impl HTTPBytes for String{
     fn vec_u8(&self) -> Vec<u8> {
         self.bytes()
             .collect()
     }
 }
 
-impl HTTPBodyTypes for &str{
+impl HTTPBytes for &str{
     fn vec_u8(&self) -> Vec<u8> {
         self.bytes()
             .collect()
     }
 }
 
-impl HTTPBodyTypes for [u8]{
+impl HTTPBytes for [u8]{
     fn vec_u8(&self) -> Vec<u8> {
         self.to_vec()
     }
 }
 
-impl HTTPBodyTypes for Vec<u8>{
+impl HTTPBytes for Vec<u8>{
     fn vec_u8(&self) -> Vec<u8> {
         self.clone()
     }
@@ -122,7 +122,7 @@ impl HTTPBodyTypes for Vec<u8>{
 impl ResponseBuilder {
     pub fn body<T>(self,body:T) -> Self
     where
-        T:HTTPBodyTypes
+        T: HTTPBytes
     {
         let mut this = self;
         this.body = Some(body.vec_u8());
