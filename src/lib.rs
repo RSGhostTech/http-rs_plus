@@ -4,4 +4,4 @@ pub mod response;
 pub mod error;
 pub mod client;
 pub mod header;
-pub mod header_map;
+pub mod map;

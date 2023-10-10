@@ -1,5 +1,5 @@
 use crate::header::version::HTTPVersion;
-use crate::header_map::HeaderMap;
+use crate::map::HTTPHeadMap;
 use crate::prelude::HeaderMappingType;
 
 pub mod server;
@@ -8,12 +8,12 @@ pub mod client;
 
 pub struct Response{
     version:HTTPVersion,
-    header:HeaderMap,
+    header: HTTPHeadMap,
     body:Vec<u8>
 }
 
 impl Response{
-    pub fn new(version:HTTPVersion,header:HeaderMap,body:Vec<u8>) -> Self{
+    pub fn new(version:HTTPVersion, header: HTTPHeadMap, body:Vec<u8>) -> Self{
         Response {
             version,
             header,
@@ -25,7 +25,7 @@ impl Response{
         self.version
     }
     
-    pub fn header(&self) -> &HeaderMap {
+    pub fn header(&self) -> &HTTPHeadMap {
         &self.header
     }
     
@@ -41,13 +41,13 @@ impl Response{
 #[derive(Clone, Debug, Default)]
 pub struct ResponseBuilder{
     version:Option<HTTPVersion>,
-    header:Option<HeaderMap>,
+    header:Option<HTTPHeadMap>,
     body:Option<Vec<u8>>
 }
 
 impl ResponseBuilder{
     #[allow(clippy::new_ret_no_self)]
-    pub fn new(version:HTTPVersion,header:HeaderMap,body:Vec<u8>) -> Response{
+    pub fn new(version:HTTPVersion, header: HTTPHeadMap, body:Vec<u8>) -> Response{
         Response::new(version,header,body)
     }
     
@@ -61,7 +61,7 @@ impl ResponseBuilder{
         this
     }
     
-    pub fn header(self,header:HeaderMap) -> Self{
+    pub fn header(self, header: HTTPHeadMap) -> Self{
         let mut this = self;
         this.header = Some(header);
         this

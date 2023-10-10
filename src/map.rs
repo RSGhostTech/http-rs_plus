@@ -1,86 +1,89 @@
 use std::cell::RefCell;
 use std::collections::HashMap;
 
-pub type HeaderMapKey = String;
-pub type HeaderMapValue = String;
+pub type HTTPHeadKey = String;
+pub type HTTPHeadValue = String;
 
 #[derive(Clone, Debug)]
-pub struct HeaderMap {
-    map: RefCell<HashMap<HeaderMapKey, HeaderMapValue>>,
+pub struct HTTPHeadMap {
+    map: RefCell<HashMap<HTTPHeadKey, HTTPHeadValue>>,
     iter_count: RefCell<Option<usize>>
 }
 
-impl Default for HeaderMap {
+impl Default for HTTPHeadMap {
     fn default() -> Self {
-        HeaderMap {
+        HTTPHeadMap {
             map: RefCell::new(HashMap::new()),
             iter_count: RefCell::new(None)
         }
     }
 }
 
-impl HeaderMap {
+impl HTTPHeadMap {
     pub fn new() -> Self {
-        HeaderMap::default()
+        HTTPHeadMap::default()
     }
     
-    pub fn insert(&self, k: HeaderMapKey, v: HeaderMapValue) -> Option<HeaderMapValue> {
+    #[inline]
+    pub fn insert(&self, k: HTTPHeadKey, v: HTTPHeadValue) -> Option<HTTPHeadValue> {
         self.map.borrow_mut()
             .insert(k,v)
     }
     
-    pub fn remove(&self, k: HeaderMapKey) -> Option<HeaderMapValue> {
+    pub fn remove(&self, k: HTTPHeadKey) -> Option<HTTPHeadValue> {
         self.map.borrow_mut()
             .remove(&k)
     }
     
+    #[inline]
     pub fn current_iter_count(&self) -> Option<usize> {
         *self.iter_count.borrow()
     }
     
+    #[inline]
+    pub fn current_iter_count_mut(&self,value:Option<usize>) {
+        *self.iter_count.borrow_mut() = value
+    }
+    
+    #[inline]
     pub fn len(&self) -> usize {
         self.map.borrow()
             .len()
     }
     
-    pub fn insert_tuple(&self,tuple:(HeaderMapKey,HeaderMapValue)) -> Option<HeaderMapValue>{
+    #[inline]
+    pub fn insert_tuple(&self, tuple:(HTTPHeadKey, HTTPHeadValue)) -> Option<HTTPHeadValue>{
         self.insert(tuple.0,tuple.1)
     }
     
-    //  warn by clippy
-    /*
-        struct `HeaderMap` has a public `len` method, but no `is_empty` method
-        Help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#len_without_is_empty
-        Note: `#[warn(clippy::len_without_is_empty)]` on by default
-    */
     pub fn is_empty(&self) -> bool {
         self.len() == 0
     }
 }
 
-impl Iterator for HeaderMap {
-    type Item = (HeaderMapKey, HeaderMapValue);
+impl Iterator for HTTPHeadMap {
+    type Item = (HTTPHeadKey, HTTPHeadValue);
     
     fn next(&mut self) -> Option<Self::Item> {
-        let is_none = self.iter_count.borrow().is_none();
+        let iter_count = self.current_iter_count();
         
         //未初始化
-        if is_none {
-            *self.iter_count.borrow_mut() = Some(0);
+        if iter_count.is_none() {
+            self.current_iter_count_mut(Some(0));
             //初始化了但是已经迭代完了
-        } else if self.iter_count.borrow().unwrap() >= self.map.borrow().len() {
-            *self.iter_count.borrow_mut() = None;           //改成None
+        } else if iter_count.unwrap() >= self.len() {
+            self.current_iter_count_mut(None);         //改成None
             return None
         }
         
-        let offset = self.iter_count.borrow().unwrap();
+        let iter_count = iter_count.unwrap();
         //自增操作
-        *self.iter_count.borrow_mut() = Some(offset + 1);
+        self.current_iter_count_mut(Some(iter_count + 1));
         
         self.map.borrow()
             .iter()
-            .nth(offset)
-            .map(|(ref_k, ref_v)| (ref_k.to_string(), ref_v.to_string()))
+            .nth(iter_count)
+            .map(|(ref_k, ref_v)| (ref_k.clone(), ref_v.clone()))
     }
 }
 
@@ -99,11 +102,11 @@ pub enum HeaderMappingError {
 pub type HeaderMappingResult<T> = Result<T,HeaderMappingError>;
 
 pub trait HeaderMappingType {
-    fn parse_key_value(&self) -> HeaderMappingResult<(HeaderMapKey,HeaderMapValue)>;
+    fn parse_key_value(&self) -> HeaderMappingResult<(HTTPHeadKey, HTTPHeadValue)>;
 }
 
 impl HeaderMappingType for [u8] {
-    fn parse_key_value(&self) -> HeaderMappingResult<(HeaderMapKey, HeaderMapValue)> {
+    fn parse_key_value(&self) -> HeaderMappingResult<(HTTPHeadKey, HTTPHeadValue)> {
         if self.is_empty() {
             return Err(HeaderMappingError::EmptyRaw)
         }
@@ -133,7 +136,7 @@ impl HeaderMappingType for [u8] {
 }
 
 impl HeaderMappingType for String{
-    fn parse_key_value(&self) -> HeaderMappingResult<(HeaderMapKey, HeaderMapValue)> {
+    fn parse_key_value(&self) -> HeaderMappingResult<(HTTPHeadKey, HTTPHeadValue)> {
         if self.is_empty() {
             return Err(HeaderMappingError::EmptyString)
         };
@@ -154,7 +157,7 @@ impl HeaderMappingType for String{
 }
 
 impl HeaderMappingType for &str {
-    fn parse_key_value(&self) -> HeaderMappingResult<(HeaderMapKey, HeaderMapValue)> {
+    fn parse_key_value(&self) -> HeaderMappingResult<(HTTPHeadKey, HTTPHeadValue)> {
         if self.is_empty() {
             return Err(HeaderMappingError::EmptyString)
         }
@@ -174,8 +177,8 @@ impl HeaderMappingType for &str {
     }
 }
 
-impl HeaderMap {
-    pub fn try_insert<T>(&self,t:T) -> HeaderMappingResult<Option<HeaderMapValue>>
+impl HTTPHeadMap {
+    pub fn try_insert<T>(&self,t:T) -> HeaderMappingResult<Option<HTTPHeadValue>>
     where
         T:HeaderMappingType
     {
