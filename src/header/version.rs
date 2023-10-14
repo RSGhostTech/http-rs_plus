@@ -1,5 +1,7 @@
+use crate::prelude::HTTPBytes;
+
 #[derive(Copy, Clone, Debug)]
-pub enum HTTPVersionParseError {
+pub enum HTTPVersionMatchError {
     UnknownChars,
     NotMatch
 }
@@ -34,16 +36,15 @@ impl<'a> Into<&'a str> for HTTPVersion {
 }
 
 impl HTTPVersion {
-    pub fn from_raw(raw: Vec<u8>) -> Result<Self, HTTPVersionParseError> {
-        if let Ok(s) = String::from_utf8(raw) {
-            match s.as_str() {
-                "HTTP/1.0" => Ok(HTTPVersion::HTTP1_0),
-                "HTTP/1.1" => Ok(HTTPVersion::HTTP1_1),
-                "HTTP/2" => Ok(HTTPVersion::HTTP2),
-                _ => Err(HTTPVersionParseError::NotMatch)
-            }
-        } else {
-            Err(HTTPVersionParseError::UnknownChars)
+    pub fn from<T>(t: T) -> Result<Self, HTTPVersionMatchError> 
+    where 
+        T:HTTPBytes
+    {
+        match t.string().as_str() {
+            "HTTP/1.0" => Ok(HTTPVersion::HTTP1_0),
+            "HTTP/1.1" => Ok(HTTPVersion::HTTP1_1),
+            "HTTP/2" => Ok(HTTPVersion::HTTP2),
+            _ => Err(HTTPVersionMatchError::NotMatch)
         }
     }
     pub fn as_bytes(&self) -> &[u8] {

@@ -1,5 +1,1 @@
-pub use super::header::{
-    HTTPMethodParseError,
-    HTTPVersionParseError
-};
-
+pub use super::header::HTTPVersionMatchError;

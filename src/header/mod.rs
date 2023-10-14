@@ -2,9 +2,9 @@ pub use method::{
     ServerMethodCode,
     ServerMethodString
 };
-pub use method::HTTPMethodParseError;
+pub use method::HTTPMethodMatchError;
 pub use prelude::*;
-pub use version::HTTPVersionParseError;
+pub use version::HTTPVersionMatchError;
 
 pub mod method;
 pub mod version;
