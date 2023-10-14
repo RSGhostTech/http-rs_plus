@@ -1,5 +1,5 @@
 use crate::header::method::HTTPServerMethod;
-use crate::response::{Response, ResponseBuilder};
+use crate::response::{HTTPResponse, ResponseBuilder};
 
 ///
 /// 服务器给客户端的响应，或者服务器的响应
@@ -8,19 +8,19 @@ use crate::response::{Response, ResponseBuilder};
 ///
 #[derive(Clone, Debug)]
 pub struct HTTPServerResponse {
-    response: Response,
+    response: HTTPResponse,
     method: HTTPServerMethod
 }
 
 #[derive(Clone, Debug, Default)]
 pub struct HTTPServerResponseBuilder {
-    response: Option<Response>,
+    response: Option<HTTPResponse>,
     method: Option<HTTPServerMethod>
 }
 
 impl HTTPServerResponseBuilder {
     #[allow(clippy::new_ret_no_self)]
-    pub fn new(response: Response, method: HTTPServerMethod) -> HTTPServerResponse {
+    pub fn new(response: HTTPResponse, method: HTTPServerMethod) -> HTTPServerResponse {
         HTTPServerResponse::new(response, method)
     }
     
@@ -28,7 +28,7 @@ impl HTTPServerResponseBuilder {
         Self::default()
     }
     
-    pub fn response(self, response: Response) -> Self {
+    pub fn response(self, response: HTTPResponse) -> Self {
         let mut this = self;
         this.response = Some(response);
         this
@@ -54,7 +54,7 @@ impl HTTPServerResponseBuilder {
 }
 
 impl HTTPServerResponse {
-    pub fn new(response: Response, method: HTTPServerMethod) -> Self {
+    pub fn new(response: HTTPResponse, method: HTTPServerMethod) -> Self {
         HTTPServerResponse {
             response,
             method
@@ -75,9 +75,12 @@ impl HTTPServerResponse {
         let header = header
             .map(|(key, value)| format!("{}:{};\r\n", key, value))
             .collect::<Vec<String>>()
-            .join("");
+            .join("")
+            .trim()
+            .parse::<String>()
+            .unwrap();
         
-        format!("{} {}\r\n{}{}", version, method, header, body)
+        format!("{} {}\r\n{}\r\n{}", version, method, header, body)
     }
     
     pub fn http_bytes(self) -> Vec<u8> {

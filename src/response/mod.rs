@@ -6,15 +6,15 @@ pub mod server;
 pub mod client;
 
 #[derive(Clone, Debug)]
-pub struct Response {
+pub struct HTTPResponse {
     version: HTTPVersion,
     header: HTTPHeadMap,
     body: Vec<u8>
 }
 
-impl Response {
+impl HTTPResponse {
     pub fn new(version: HTTPVersion, header: HTTPHeadMap, body: Vec<u8>) -> Self {
-        Response {
+        HTTPResponse {
             version,
             header,
             body
@@ -47,8 +47,8 @@ pub struct ResponseBuilder {
 
 impl ResponseBuilder {
     #[allow(clippy::new_ret_no_self)]
-    pub fn new(version: HTTPVersion, header: HTTPHeadMap, body: Vec<u8>) -> Response {
-        Response::new(version, header, body)
+    pub fn new(version: HTTPVersion, header: HTTPHeadMap, body: Vec<u8>) -> HTTPResponse {
+        HTTPResponse::new(version, header, body)
     }
     
     pub fn builder() -> Self {
@@ -80,12 +80,12 @@ impl ResponseBuilder {
         this
     }
     
-    pub fn build(self) -> Response {
+    pub fn build(self) -> HTTPResponse {
         let version = self.version.unwrap_or(HTTPVersion::HTTP1_1);
         let header = self.header.unwrap_or_default();
         let body = self.body.unwrap_or_default();
         
-        Response::new(version, header, body)
+        HTTPResponse::new(version, header, body)
     }
 }
 

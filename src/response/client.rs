@@ -1,7 +1,7 @@
 use crate::header::method::HTTPClientMethod;
 use crate::header::version::HTTPVersion;
 use crate::map::HTTPHeadMap;
-use crate::response::{HTTPBytes, Response, ResponseBuilder};
+use crate::response::{HTTPBytes, HTTPResponse, ResponseBuilder};
 
 ///
 /// 客户端给服务器的响应，或者客户端的响应
@@ -10,13 +10,13 @@ use crate::response::{HTTPBytes, Response, ResponseBuilder};
 ///
 #[derive(Clone, Debug)]
 pub struct HTTPClientResponse {
-    response: Response,
+    response: HTTPResponse,
     method: HTTPClientMethod,
     resource: String
 }
 
 impl HTTPClientResponse {
-    pub fn new(response: Response, method: HTTPClientMethod, resource: String) -> Self {
+    pub fn new(response: HTTPResponse, method: HTTPClientMethod, resource: String) -> Self {
         HTTPClientResponse {
             response,
             method,
@@ -65,7 +65,10 @@ impl HTTPClientResponse {
         let header = self.response.header
                          .map(|(k, v)| format!("{}:{}\r\n", k, v))
                          .collect::<Vec<String>>()
-                         .join("");
+                         .join("")
+                         .trim()
+                         .parse::<String>()
+                         .unwrap();
         /*let mut header = String::new();
         for i in header_iter {
             header.push_str(&i)
@@ -79,22 +82,26 @@ impl HTTPClientResponse {
         let resource = self.resource;
         let version = self.response.version.to_string();
         let body = String::from_utf8_lossy(&self.response.body);
-        format!("{} {} {}\r\n{}{}", method, resource, version, header, body)
+        format!("{} {} {}\r\n{}\r\n{}", method, resource, version, header, body)
     }
 }
 
 #[derive(Clone, Debug, Default)]
-pub struct HTTPClientResponseBuilder {
+pub struct HTTPClientResponseFormatter {
     cache: Vec<u8>
 }
 
-impl HTTPClientResponseBuilder {
+impl HTTPClientResponseFormatter {
     pub fn init() -> Self {
         Self::default()
     }
     
-    pub fn new(cache: Vec<u8>) -> Self {
-        HTTPClientResponseBuilder {
+    pub fn new_from<T>(cache: T) -> Self
+        where
+            T: HTTPBytes
+    {
+        let cache = cache.vec_u8();
+        HTTPClientResponseFormatter {
             cache
         }
     }
@@ -197,11 +204,11 @@ impl HTTPClientResponseBuilder {
 mod test {
     use std::time::Instant;
     
-    use crate::response::client::HTTPClientResponseBuilder;
+    use crate::response::client::HTTPClientResponseFormatter;
     
     #[test]
     fn build() {
-        let client = HTTPClientResponseBuilder::new(
+        let client = HTTPClientResponseFormatter::new_from(
             String::from(
                 "POST w/xp HTTP/2
                     Host: 127.0.0.1:8000
@@ -211,7 +218,7 @@ mod test {
                     w"
             )
                 .bytes()
-                .collect()
+                .collect::<Vec<_>>()
         ).build().unwrap();
         
         let response = client.response;
@@ -230,8 +237,8 @@ mod test {
     }
     
     #[test]
-    fn a() {
-        let client = HTTPClientResponseBuilder::new(
+    fn time() {
+        let client = HTTPClientResponseFormatter::new_from(
             String::from(
                 "POST w/xp HTTP/2
                     Host: 127.0.0.1:8000
@@ -241,12 +248,91 @@ mod test {
                     w"
             )
                 .bytes()
-                .collect()
+                .collect::<Vec<_>>()
         ).build().unwrap();
         let time = Instant::now();
         let http = client.http();
         let time = time.elapsed();
         println!("{}", http);
         println!("Time :{:.4}ms", time.as_micros() as f64 / 1000.0)
+    }
+}
+
+#[derive(Clone, Debug, Default)]
+pub struct HTTPClientResponseBuilder {
+    response: Option<HTTPResponse>,
+    method: Option<HTTPClientMethod>,
+    resource: Option<String>
+}
+
+impl HTTPClientResponseBuilder {
+    pub fn new() -> Self {
+        Self::default()
+    }
+    
+    pub fn response(self, response: HTTPResponse) -> Self {
+        let mut this = self;
+        this.response = Some(response);
+        this
+    }
+    
+    pub fn method(self, method: HTTPClientMethod) -> Self {
+        let mut this = self;
+        this.method = Some(method);
+        this
+    }
+    
+    pub fn resource<T>(self, resource: T) -> Self
+        where
+            T: ToString
+    {
+        let mut this = self;
+        this.resource = Some(resource.to_string());
+        this
+    }
+    
+    pub fn build(self) -> HTTPClientResponse {
+        let response = self.response.unwrap_or(ResponseBuilder::default().build());
+        let method = self.method.unwrap_or(HTTPClientMethod::GET);
+        let resource = self.resource.unwrap_or(String::from("/"));
+        HTTPClientResponse::new(response, method, resource)
+    }
+}
+
+#[cfg(test)]
+mod test1 {
+    use std::time::Instant;
+    
+    use crate::header::method::HTTPClientMethod;
+    use crate::response::client::{HTTPClientResponseBuilder, HTTPClientResponseFormatter};
+    use crate::response::ResponseBuilder;
+    
+    #[test]
+    fn build() {
+        let response = HTTPClientResponseBuilder::new()
+            .response(ResponseBuilder::builder().body("CNM").build())
+            .resource("/api")
+            .method(HTTPClientMethod::POST)
+            .build();
+        let http = response.http();
+        println!("Build:{}", http);
+        
+        let format = HTTPClientResponseFormatter::new_from(http).build();
+        println!("Format:{}", format.unwrap().http());
+    }
+    
+    #[test]
+    fn time() {
+        let response = HTTPClientResponseBuilder::new()
+            .response(ResponseBuilder::builder().body("CNM").build())
+            .resource("/api")
+            .method(HTTPClientMethod::POST)
+            .build();
+        let time = Instant::now();
+        let http = response.http();
+        let time = time.elapsed();
+        
+        println!("{}", http);
+        println!("{:.4}ms", time.as_micros() as f64 / 1000.0);
     }
 }
