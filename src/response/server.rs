@@ -1,5 +1,5 @@
 use crate::header::method::HTTPServerMethod;
-use crate::response::{HTTPResponse, ResponseBuilder};
+use crate::response::{HTTPResponse, HTTPResponseBuilder};
 
 ///
 /// 服务器给客户端的响应，或者服务器的响应
@@ -42,7 +42,7 @@ impl HTTPServerResponseBuilder {
     
     pub fn build(self) -> HTTPServerResponse {
         let response = self.response.unwrap_or(
-            ResponseBuilder::builder().build()
+            HTTPResponseBuilder::builder().build()
         );
         
         let method = self.method.unwrap_or(
@@ -75,15 +75,44 @@ impl HTTPServerResponse {
         let header = header
             .map(|(key, value)| format!("{}:{};\r\n", key, value))
             .collect::<Vec<String>>()
-            .join("")
-            .trim()
-            .parse::<String>()
-            .unwrap();
+            .join("");
         
         format!("{} {}\r\n{}\r\n{}", version, method, header, body)
     }
     
     pub fn http_bytes(self) -> Vec<u8> {
         self.http().into_bytes()
+    }
+}
+
+#[cfg(test)]
+mod test{
+    use std::io::{Read, Write};
+    use std::net::TcpListener;
+    use crate::header::method::HTTPServerMethod;
+    use crate::response::HTTPResponseBuilder;
+    use crate::response::server::HTTPServerResponseBuilder;
+    
+    #[test]
+    fn send() {
+        let listener = TcpListener::bind("0.0.0.0:8000").unwrap();
+        let response = HTTPServerResponseBuilder::builder()
+            .response(
+                HTTPResponseBuilder::builder()
+                    .body("<h1>Hello!</h1>")
+                    .build()
+            ).method(HTTPServerMethod::OK)
+            .build();
+        
+        for i in listener.incoming(){
+            if let Ok(mut s) = i {
+                let mut buf = [0;4096];
+                s.read(&mut buf).unwrap();
+                s.write_all(&response.clone().http_bytes()).unwrap();
+                s.flush().unwrap();
+            }else {
+                continue
+            }
+        }
     }
 }

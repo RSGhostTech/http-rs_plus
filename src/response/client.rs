@@ -1,7 +1,7 @@
 use crate::header::method::HTTPClientMethod;
 use crate::header::version::HTTPVersion;
 use crate::map::HTTPHeadMap;
-use crate::response::{HTTPBytes, HTTPResponse, ResponseBuilder};
+use crate::response::{HTTPBytes, HTTPResponse, HTTPResponseBuilder};
 
 ///
 /// 客户端给服务器的响应，或者客户端的响应
@@ -65,10 +65,7 @@ impl HTTPClientResponse {
         let header = self.response.header
                          .map(|(k, v)| format!("{}:{}\r\n", k, v))
                          .collect::<Vec<String>>()
-                         .join("")
-                         .trim()
-                         .parse::<String>()
-                         .unwrap();
+                         .join("");
         /*let mut header = String::new();
         for i in header_iter {
             header.push_str(&i)
@@ -83,6 +80,10 @@ impl HTTPClientResponse {
         let version = self.response.version.to_string();
         let body = String::from_utf8_lossy(&self.response.body);
         format!("{} {} {}\r\n{}\r\n{}", method, resource, version, header, body)
+    }
+    
+    pub fn http_bytes(self) -> Vec<u8>{
+        self.http().into_bytes()
     }
 }
 
@@ -188,7 +189,7 @@ impl HTTPClientResponseFormatter {
                 version.unwrap(),
                 method.unwrap()
             );
-            let response = ResponseBuilder::new(
+            let response = HTTPResponseBuilder::new(
                 version,
                 header,
                 body
@@ -292,7 +293,7 @@ impl HTTPClientResponseBuilder {
     }
     
     pub fn build(self) -> HTTPClientResponse {
-        let response = self.response.unwrap_or(ResponseBuilder::default().build());
+        let response = self.response.unwrap_or(HTTPResponseBuilder::default().build());
         let method = self.method.unwrap_or(HTTPClientMethod::GET);
         let resource = self.resource.unwrap_or(String::from("/"));
         HTTPClientResponse::new(response, method, resource)
@@ -301,16 +302,19 @@ impl HTTPClientResponseBuilder {
 
 #[cfg(test)]
 mod test1 {
+    use std::io::{Read, Write};
+    use std::net::TcpStream;
     use std::time::Instant;
     
     use crate::header::method::HTTPClientMethod;
+    use crate::map::HTTPHeadMap;
     use crate::response::client::{HTTPClientResponseBuilder, HTTPClientResponseFormatter};
-    use crate::response::ResponseBuilder;
+    use crate::response::HTTPResponseBuilder;
     
     #[test]
     fn build() {
         let response = HTTPClientResponseBuilder::new()
-            .response(ResponseBuilder::builder().body("CNM").build())
+            .response(HTTPResponseBuilder::builder().body("CNM").build())
             .resource("/api")
             .method(HTTPClientMethod::POST)
             .build();
@@ -324,7 +328,7 @@ mod test1 {
     #[test]
     fn time() {
         let response = HTTPClientResponseBuilder::new()
-            .response(ResponseBuilder::builder().body("CNM").build())
+            .response(HTTPResponseBuilder::builder().body("CNM").build())
             .resource("/api")
             .method(HTTPClientMethod::POST)
             .build();
@@ -334,5 +338,29 @@ mod test1 {
         
         println!("{}", http);
         println!("{:.4}ms", time.as_micros() as f64 / 1000.0);
+    }
+    
+    #[test]
+    fn send() {
+        let mut conn = TcpStream::connect("www.baidu.com:80").unwrap();
+        let header = HTTPHeadMap::new();
+        header.try_insert(r"User-Agent:Mozilla/5.0 (iPad; U; CPU OS 4_3_3 like Mac OS X; en-us) AppleWebKit/533.17.9 (KHTML, like Gecko) Version/5.0.2 Mobile/8J2 Safari/6533.18.5").unwrap();
+        header.try_insert(r"Content-Type:text/html").unwrap();
+        let response = HTTPClientResponseBuilder::new()
+            .resource("/")
+            .method(HTTPClientMethod::GET)
+            .response(
+                HTTPResponseBuilder::builder()
+                    .header(header)
+                    .build()
+            ).build();
+        
+        let http = response.http();
+        conn.write_all(http.as_bytes()).unwrap();
+        conn.flush().unwrap();
+        
+        let mut buf = [0;8192];
+        let len = conn.read(&mut buf).unwrap();
+        println!("{}",String::from_utf8_lossy(&buf[..len]))
     }
 }

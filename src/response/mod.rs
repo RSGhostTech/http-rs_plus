@@ -39,13 +39,13 @@ impl HTTPResponse {
 }
 
 #[derive(Clone, Debug, Default)]
-pub struct ResponseBuilder {
+pub struct HTTPResponseBuilder {
     version: Option<HTTPVersion>,
     header: Option<HTTPHeadMap>,
     body: Option<Vec<u8>>
 }
 
-impl ResponseBuilder {
+impl HTTPResponseBuilder {
     #[allow(clippy::new_ret_no_self)]
     pub fn new(version: HTTPVersion, header: HTTPHeadMap, body: Vec<u8>) -> HTTPResponse {
         HTTPResponse::new(version, header, body)
@@ -140,7 +140,7 @@ impl HTTPBytes for Vec<u8> {
     }
 }
 
-impl ResponseBuilder {
+impl HTTPResponseBuilder {
     pub fn body<T>(self, body: T) -> Self
         where
             T: HTTPBytes
