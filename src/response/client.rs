@@ -110,20 +110,29 @@ impl HTTPClientResponseBuilder {
             //Body
             let mut body = String::new();
             for i in space{
-                body.push_str(i)
+                body.push_str(&format!("{}\r\n",i))
             }
+            let body = body.trim()
+                .parse::<String>()
+                .unwrap();
             
             //构建行
             let body = body.vec_u8();
-            let version = HTTPVersion::from(version)
-                .unwrap_or(HTTP1_1);
+            let version = HTTPVersion::from(version);
+            let method = HTTPClientMethod::from(method);
+            if version.is_err() || method.is_err() {
+                return None
+            }
+            let (version,method) = (
+                version.unwrap(),
+                method.unwrap()
+            );
             let response = ResponseBuilder::new(
                 version,
                 header,
                 body
             );
-            let method = HTTPClientMethod::from(method)
-                .unwrap_or(HTTPClientMethod::GET);
+
             return Some(HTTPClientResponse::new(response,method,resource))
         }
         None
@@ -161,6 +170,6 @@ mod test{
         println!("Method:{:?}",method);
         println!("Resource:{:?}",source);
         println!("Header:{:?}",header);
-        println!("Body:{}",response_body);
+        println!("Body:{:?}",response_body);
     }
 }
