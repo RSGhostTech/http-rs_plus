@@ -76,7 +76,7 @@ impl Iterator for HTTPHeadMap {
             return None
         }
         
-        let iter_count = iter_count.unwrap();
+        let iter_count = self.current_iter_count().unwrap();
         //自增操作
         self.current_iter_count_mut(Some(iter_count + 1));
         

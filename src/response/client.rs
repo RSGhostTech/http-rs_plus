@@ -1,3 +1,4 @@
+use std::fmt::{Display, Formatter};
 use crate::header::method::HTTPClientMethod;
 use crate::header::version::HTTPVersion;
 use crate::map::HTTPHeadMap;
@@ -66,19 +67,20 @@ impl HTTPClientResponse {
         let header_iter = self.response.header
             .map(|(k,v)| format!("{}:{}\r\n",k,v))
             .collect::<Vec<String>>();
-        let mut header = String::new();
+        /*let mut header = String::new();
         for i in header_iter {
             header.push_str(&i)
         }
         let header = header.trim()
             .parse::<String>()
-            .unwrap();
+            .unwrap();*/
+        let header = header_iter.join("");
         
         let method = self.method.to_string();
         let resource = self.resource;
         let version = self.response.version.to_string();
         let body = String::from_utf8_lossy(&self.response.body);
-        format!("{} {} {}\r\n{}\r\n{}",method,resource,version,header,body)
+        format!("{} {} {}\r\n{}{}",method,resource,version,header,body)
     }
 }
 
@@ -196,7 +198,7 @@ impl HTTPClientResponseBuilder {
 
 #[cfg(test)]
 mod test{
-    use std::time::{Duration, Instant};
+    use std::time::Instant;
     use crate::response::client::HTTPClientResponseBuilder;
     
     #[test]
@@ -231,7 +233,6 @@ mod test{
     
     #[test]
     fn a(){
-        let time = Instant::now();
         let client = HTTPClientResponseBuilder::new(
             String::from(
                 "POST w/xp HTTP/2
@@ -244,8 +245,10 @@ mod test{
                 .bytes()
                 .collect()
         ).build().unwrap();
+        let time = Instant::now();
+        let http = client.http();
         let time = time.elapsed();
-        println!("{}",client.http());
-        println!("Time :{:.4}",time.as_micros() as f64 / 1000.0)
+        println!("{}",http);
+        println!("Time :{:.4}ms",time.as_micros() as f64 / 1000.0)
     }
 }

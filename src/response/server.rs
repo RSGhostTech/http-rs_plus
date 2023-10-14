@@ -75,15 +75,9 @@ impl HTTPServerResponse {
         let header_iter = header.into_iter()
             .map(|(key,value)| format!("{}:{};\r\n",key,value))
             .collect::<Vec<String>>();
-        let mut header = String::new();
-        for i in header_iter {
-            header.push_str(&i)
-        }
-        let header = header.trim()
-            .parse::<String>()
-            .unwrap();
+        let header = header_iter.join("");
         
-        format!("{} {}\r\n{}\r\n{}", version, method, header, body)
+        format!("{} {}\r\n{}{}", version, method, header, body)
     }
     
     pub fn http_bytes(self) -> Vec<u8>{
