@@ -24,6 +24,42 @@ impl HTTPClientResponse {
             resource
         }
     }
+    
+    pub fn resource(&self) -> String{
+        self.resource.clone()
+    }
+    
+    pub fn method(&self) -> HTTPClientMethod{
+        self.method
+    }
+    
+    pub fn http_version(&self) -> HTTPVersion{
+        self.response.version
+    }
+    
+    pub fn header(&self) -> &HTTPHeadMap{
+        &self.response.header
+    }
+    
+    pub fn header_mut(&mut self) -> &mut HTTPHeadMap{
+        &mut self.response.header
+    }
+    
+    pub fn header_clone(&self) -> HTTPHeadMap{
+        self.response.header.clone()
+    }
+    
+    pub fn body_clone(&self) -> Vec<u8>{
+        self.response.body.clone()
+    }
+    
+    pub fn body(&self) -> &Vec<u8>{
+        &self.response.body
+    }
+    
+    pub fn body_mut(&mut self) -> &mut Vec<u8>{
+        &mut self.response.body
+    }
 }
 
 #[derive(Clone,Debug,Default)]
