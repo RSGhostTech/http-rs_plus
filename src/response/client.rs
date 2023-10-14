@@ -1,6 +1,5 @@
 use crate::header::method::HTTPClientMethod;
 use crate::header::version::HTTPVersion;
-use crate::header::version::HTTPVersion::HTTP1_1;
 use crate::map::HTTPHeadMap;
 use crate::response::{HTTPBytes, Response, ResponseBuilder};
 
