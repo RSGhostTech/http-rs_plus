@@ -94,6 +94,7 @@ mod test{
     use crate::response::server::HTTPServerResponseBuilder;
     
     #[test]
+    #[allow(clippy::unused_io_amount)]
     fn send() {
         let listener = TcpListener::bind("0.0.0.0:8000").unwrap();
         let response = HTTPServerResponseBuilder::builder()
