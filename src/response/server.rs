@@ -86,9 +86,10 @@ impl HTTPServerResponse {
 }
 
 #[cfg(test)]
-mod test{
+mod test {
     use std::io::{Read, Write};
     use std::net::TcpListener;
+    
     use crate::header::method::HTTPServerMethod;
     use crate::response::HTTPResponseBuilder;
     use crate::response::server::HTTPServerResponseBuilder;
@@ -105,13 +106,13 @@ mod test{
             ).method(HTTPServerMethod::OK)
             .build();
         
-        for i in listener.incoming(){
+        for i in listener.incoming() {
             if let Ok(mut s) = i {
-                let mut buf = [0;4096];
+                let mut buf = [0; 4096];
                 s.read(&mut buf).unwrap();
                 s.write_all(&response.clone().http_bytes()).unwrap();
                 s.flush().unwrap();
-            }else {
+            } else {
                 continue
             }
         }

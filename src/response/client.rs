@@ -82,7 +82,7 @@ impl HTTPClientResponse {
         format!("{} {} {}\r\n{}\r\n{}", method, resource, version, header, body)
     }
     
-    pub fn http_bytes(self) -> Vec<u8>{
+    pub fn http_bytes(self) -> Vec<u8> {
         self.http().into_bytes()
     }
 }
@@ -359,8 +359,8 @@ mod test1 {
         conn.write_all(http.as_bytes()).unwrap();
         conn.flush().unwrap();
         
-        let mut buf = [0;8192];
+        let mut buf = [0; 8192];
         let len = conn.read(&mut buf).unwrap();
-        println!("{}",String::from_utf8_lossy(&buf[..len]))
+        println!("{}", String::from_utf8_lossy(&buf[..len]))
     }
 }
