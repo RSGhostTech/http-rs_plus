@@ -27,7 +27,7 @@ impl HTTPHeadMap {
     #[inline]
     pub fn insert(&self, k: HTTPHeadKey, v: HTTPHeadValue) -> Option<HTTPHeadValue> {
         self.map.borrow_mut()
-            .insert(k,v)
+            .insert(k, v)
     }
     
     pub fn remove(&self, k: HTTPHeadKey) -> Option<HTTPHeadValue> {
@@ -41,7 +41,7 @@ impl HTTPHeadMap {
     }
     
     #[inline]
-    pub fn current_iter_count_mut(&self,value:Option<usize>) {
+    pub fn current_iter_count_mut(&self, value: Option<usize>) {
         *self.iter_count.borrow_mut() = value
     }
     
@@ -52,8 +52,8 @@ impl HTTPHeadMap {
     }
     
     #[inline]
-    pub fn insert_tuple(&self, tuple:(HTTPHeadKey, HTTPHeadValue)) -> Option<HTTPHeadValue>{
-        self.insert(tuple.0,tuple.1)
+    pub fn insert_tuple(&self, tuple: (HTTPHeadKey, HTTPHeadValue)) -> Option<HTTPHeadValue> {
+        self.insert(tuple.0, tuple.1)
     }
     
     pub fn is_empty(&self) -> bool {
@@ -99,7 +99,7 @@ pub enum HeaderMappingError {
     //空String
 }
 
-pub type HeaderMappingResult<T> = Result<T,HeaderMappingError>;
+pub type HeaderMappingResult<T> = Result<T, HeaderMappingError>;
 
 pub trait HeaderMappingType {
     fn parse_key_value(&self) -> HeaderMappingResult<(HTTPHeadKey, HTTPHeadValue)>;
@@ -121,7 +121,7 @@ impl HeaderMappingType for [u8] {
             return Err(HeaderMappingError::EmptyString)
         }
         
-        let str = str.replacen(':'," ",1);
+        let str = str.replacen(':', " ", 1);
         let mut sp = str.split_whitespace();
         if sp.clone().count() < 2 {
             return Err(HeaderMappingError::UnknownString)
@@ -129,19 +129,19 @@ impl HeaderMappingType for [u8] {
         
         let key = sp.next().unwrap().to_string();
         let value = sp.collect::<Vec<&str>>()
-            .concat();
+                      .concat();
         
-        Ok((key,value))
+        Ok((key, value))
     }
 }
 
-impl HeaderMappingType for String{
+impl HeaderMappingType for String {
     fn parse_key_value(&self) -> HeaderMappingResult<(HTTPHeadKey, HTTPHeadValue)> {
         if self.is_empty() {
             return Err(HeaderMappingError::EmptyString)
         };
         
-        let str = self.replacen(':'," ",1);
+        let str = self.replacen(':', " ", 1);
         let mut sp = str.split_whitespace();
         
         if sp.clone().count() < 2 {
@@ -150,9 +150,9 @@ impl HeaderMappingType for String{
         
         let key = sp.next().unwrap().to_string();
         let value = sp.collect::<Vec<&str>>()
-            .concat();
+                      .concat();
         
-        Ok((key,value))
+        Ok((key, value))
     }
 }
 
@@ -162,7 +162,7 @@ impl HeaderMappingType for &str {
             return Err(HeaderMappingError::EmptyString)
         }
         
-        let str = self.replacen(':'," ",1);
+        let str = self.replacen(':', " ", 1);
         let mut sp = str.split_whitespace();
         
         if sp.clone().count() < 2 {
@@ -171,16 +171,16 @@ impl HeaderMappingType for &str {
         
         let key = sp.next().unwrap().to_string();
         let value = sp.collect::<Vec<&str>>()
-            .concat();
+                      .concat();
         
-        Ok((key,value))
+        Ok((key, value))
     }
 }
 
 impl HTTPHeadMap {
-    pub fn try_insert<T>(&self,t:T) -> HeaderMappingResult<Option<HTTPHeadValue>>
-    where
-        T:HeaderMappingType
+    pub fn try_insert<T>(&self, t: T) -> HeaderMappingResult<Option<HTTPHeadValue>>
+        where
+            T: HeaderMappingType
     {
         Ok(self.insert_tuple(t.parse_key_value()?))
     }

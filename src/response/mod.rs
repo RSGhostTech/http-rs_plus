@@ -4,16 +4,16 @@ use crate::prelude::HeaderMappingType;
 
 pub mod server;
 pub mod client;
-#[derive(Clone,Debug)]
 
-pub struct Response{
-    version:HTTPVersion,
+#[derive(Clone, Debug)]
+pub struct Response {
+    version: HTTPVersion,
     header: HTTPHeadMap,
-    body:Vec<u8>
+    body: Vec<u8>
 }
 
-impl Response{
-    pub fn new(version:HTTPVersion, header: HTTPHeadMap, body:Vec<u8>) -> Self{
+impl Response {
+    pub fn new(version: HTTPVersion, header: HTTPHeadMap, body: Vec<u8>) -> Self {
         Response {
             version,
             header,
@@ -21,7 +21,7 @@ impl Response{
         }
     }
     
-    pub fn version(&self) -> HTTPVersion{
+    pub fn version(&self) -> HTTPVersion {
         self.version
     }
     
@@ -29,47 +29,47 @@ impl Response{
         &self.header
     }
     
-    pub fn body(&self) -> &Vec<u8>{
+    pub fn body(&self) -> &Vec<u8> {
         &self.body
     }
     
-    pub fn body_mut(&mut self) -> &mut Vec<u8>{
+    pub fn body_mut(&mut self) -> &mut Vec<u8> {
         &mut self.body
     }
 }
 
 #[derive(Clone, Debug, Default)]
-pub struct ResponseBuilder{
-    version:Option<HTTPVersion>,
-    header:Option<HTTPHeadMap>,
-    body:Option<Vec<u8>>
+pub struct ResponseBuilder {
+    version: Option<HTTPVersion>,
+    header: Option<HTTPHeadMap>,
+    body: Option<Vec<u8>>
 }
 
-impl ResponseBuilder{
+impl ResponseBuilder {
     #[allow(clippy::new_ret_no_self)]
-    pub fn new(version:HTTPVersion, header: HTTPHeadMap, body:Vec<u8>) -> Response{
-        Response::new(version,header,body)
+    pub fn new(version: HTTPVersion, header: HTTPHeadMap, body: Vec<u8>) -> Response {
+        Response::new(version, header, body)
     }
     
-    pub fn builder() -> Self{
+    pub fn builder() -> Self {
         Self::default()
     }
     
-    pub fn version(self,version:HTTPVersion) -> Self{
+    pub fn version(self, version: HTTPVersion) -> Self {
         let mut this = self;
         this.version = Some(version);
         this
     }
     
-    pub fn header(self, header: HTTPHeadMap) -> Self{
+    pub fn header(self, header: HTTPHeadMap) -> Self {
         let mut this = self;
         this.header = Some(header);
         this
     }
     
-    pub fn header_insert<T>(self,t:T) -> Self
-    where 
-        T:HeaderMappingType
+    pub fn header_insert<T>(self, t: T) -> Self
+        where
+            T: HeaderMappingType
     {
         let mut this = self;
         let header = this.header.unwrap_or_default();
@@ -80,21 +80,21 @@ impl ResponseBuilder{
         this
     }
     
-    pub fn build(self) -> Response{
+    pub fn build(self) -> Response {
         let version = self.version.unwrap_or(HTTPVersion::HTTP1_1);
         let header = self.header.unwrap_or_default();
         let body = self.body.unwrap_or_default();
         
-        Response::new(version,header,body)
+        Response::new(version, header, body)
     }
 }
 
-pub trait HTTPBytes{
+pub trait HTTPBytes {
     fn vec_u8(&self) -> Vec<u8>;
     fn string(&self) -> String;
 }
 
-impl HTTPBytes for String{
+impl HTTPBytes for String {
     fn vec_u8(&self) -> Vec<u8> {
         self.bytes()
             .collect()
@@ -105,7 +105,7 @@ impl HTTPBytes for String{
     }
 }
 
-impl HTTPBytes for &str{
+impl HTTPBytes for &str {
     fn vec_u8(&self) -> Vec<u8> {
         self.bytes()
             .collect()
@@ -116,7 +116,7 @@ impl HTTPBytes for &str{
     }
 }
 
-impl HTTPBytes for [u8]{
+impl HTTPBytes for [u8] {
     fn vec_u8(&self) -> Vec<u8> {
         self.to_vec()
     }
@@ -128,7 +128,7 @@ impl HTTPBytes for [u8]{
 }
 
 
-impl HTTPBytes for Vec<u8>{
+impl HTTPBytes for Vec<u8> {
     fn vec_u8(&self) -> Vec<u8> {
         self.clone()
     }
@@ -141,9 +141,9 @@ impl HTTPBytes for Vec<u8>{
 }
 
 impl ResponseBuilder {
-    pub fn body<T>(self,body:T) -> Self
-    where
-        T: HTTPBytes
+    pub fn body<T>(self, body: T) -> Self
+        where
+            T: HTTPBytes
     {
         let mut this = self;
         this.body = Some(body.vec_u8());

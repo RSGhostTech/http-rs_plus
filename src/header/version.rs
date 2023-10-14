@@ -36,9 +36,9 @@ impl<'a> Into<&'a str> for HTTPVersion {
 }
 
 impl HTTPVersion {
-    pub fn from<T>(t: T) -> Result<Self, HTTPVersionMatchError> 
-    where 
-        T:HTTPBytes
+    pub fn from<T>(t: T) -> Result<Self, HTTPVersionMatchError>
+        where
+            T: HTTPBytes
     {
         match t.string().as_str() {
             "HTTP/1.0" => Ok(HTTPVersion::HTTP1_0),
@@ -64,7 +64,7 @@ mod version_test {
     }
 }
 
-impl ToString for HTTPVersion{
+impl ToString for HTTPVersion {
     fn to_string(&self) -> String {
         (*self).into()
     }

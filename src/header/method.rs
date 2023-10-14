@@ -1,7 +1,7 @@
 use crate::prelude::HTTPBytes;
 
 #[derive(Copy, Clone, Debug)]
-pub enum HTTPMethodMatchError{
+pub enum HTTPMethodMatchError {
     NoMatch
 }
 
@@ -47,9 +47,9 @@ impl<'a> Into<&'a str> for HTTPClientMethod {
 }
 
 impl HTTPClientMethod {
-    pub fn from<T>(t:T) -> Result<Self,HTTPMethodMatchError>
-    where
-        T:HTTPBytes
+    pub fn from<T>(t: T) -> Result<Self, HTTPMethodMatchError>
+        where
+            T: HTTPBytes
     {
         match t.string().as_str() {
             "GET" => Ok(HTTPClientMethod::GET),
@@ -116,9 +116,9 @@ impl<'a> Into<&'a str> for HTTPServerMethod {
 }
 
 impl HTTPServerMethod {
-    pub fn from<T>(t:T) -> Result<Self, HTTPMethodMatchError>
-    where
-        T:HTTPBytes
+    pub fn from<T>(t: T) -> Result<Self, HTTPMethodMatchError>
+        where
+            T: HTTPBytes
     {
         match t.string().as_str() {
             "200 OK" => Ok(HTTPServerMethod::OK),
