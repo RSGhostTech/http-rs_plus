@@ -1,6 +1,6 @@
 [package]
 name = "http-rs_plus"
-version = "0.2.10"
+version = "0.8.9"
 edition = "2021"
 authors = ["RSGhostTech","momo"]
 description = "A http library for server and client"
