@@ -1,7 +1,8 @@
+use crate::prelude::HTTPBytes;
+
 #[derive(Copy, Clone, Debug)]
-pub enum HTTPMethodParseError {
-    UnknownChars,
-    NotMatch
+pub enum HTTPMethodMatchError{
+    NoMatch
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -46,20 +47,19 @@ impl<'a> Into<&'a str> for HTTPClientMethod {
 }
 
 impl HTTPClientMethod {
-    pub fn from_raw(raw: Vec<u8>) -> Result<Self, HTTPMethodParseError> {
-        if let Ok(s) = String::from_utf8(raw) {
-            match s.as_str() {
-                "GET" => Ok(HTTPClientMethod::GET),
-                "POST" => Ok(HTTPClientMethod::POST),
-                "PUT" => Ok(HTTPClientMethod::PUT),
-                "DELETE" => Ok(HTTPClientMethod::DELETE),
-                "HEAD" => Ok(HTTPClientMethod::HEAD),
-                "OPTIONS" => Ok(HTTPClientMethod::OPTIONS),
-                "TRACE" => Ok(HTTPClientMethod::TRACE),
-                _ => Err(HTTPMethodParseError::NotMatch)
-            }
-        } else {
-            Err(HTTPMethodParseError::UnknownChars)
+    pub fn from<T>(t:T) -> Result<Self,HTTPMethodMatchError>
+    where
+        T:HTTPBytes
+    {
+        match t.string().as_str() {
+            "GET" => Ok(HTTPClientMethod::GET),
+            "POST" => Ok(HTTPClientMethod::POST),
+            "PUT" => Ok(HTTPClientMethod::PUT),
+            "DELETE" => Ok(HTTPClientMethod::DELETE),
+            "HEAD" => Ok(HTTPClientMethod::HEAD),
+            "OPTIONS" => Ok(HTTPClientMethod::OPTIONS),
+            "TRACE" => Ok(HTTPClientMethod::TRACE),
+            _ => Err(HTTPMethodMatchError::NoMatch)
         }
     }
 }
@@ -116,21 +116,20 @@ impl<'a> Into<&'a str> for HTTPServerMethod {
 }
 
 impl HTTPServerMethod {
-    pub fn from_raw(raw: Vec<u8>) -> Result<Self, HTTPMethodParseError> {
-        if let Ok(s) = String::from_utf8(raw) {
-            match s.as_str() {
-                "200 OK" => Ok(HTTPServerMethod::OK),
-                "201 Created" => Ok(HTTPServerMethod::Created),
-                "202 Accepted" => Ok(HTTPServerMethod::Accepted),
-                "400 Bad Request" => Ok(HTTPServerMethod::BadRequest),
-                "401 Unauthorized" => Ok(HTTPServerMethod::Unauthorized),
-                "403 Forbidden" => Ok(HTTPServerMethod::Forbidden),
-                "404 Not Found" => Ok(HTTPServerMethod::NotFound),
-                "500 Internal Server Error" => Ok(HTTPServerMethod::InternalServerError),
-                _ => Err(HTTPMethodParseError::NotMatch)
-            }
-        } else {
-            Err(HTTPMethodParseError::UnknownChars)
+    pub fn from<T>(t:T) -> Result<Self, HTTPMethodMatchError>
+    where
+        T:HTTPBytes
+    {
+        match t.string().as_str() {
+            "200 OK" => Ok(HTTPServerMethod::OK),
+            "201 Created" => Ok(HTTPServerMethod::Created),
+            "202 Accepted" => Ok(HTTPServerMethod::Accepted),
+            "400 Bad Request" => Ok(HTTPServerMethod::BadRequest),
+            "401 Unauthorized" => Ok(HTTPServerMethod::Unauthorized),
+            "403 Forbidden" => Ok(HTTPServerMethod::Forbidden),
+            "404 Not Found" => Ok(HTTPServerMethod::NotFound),
+            "500 Internal Server Error" => Ok(HTTPServerMethod::InternalServerError),
+            _ => Err(HTTPMethodMatchError::NoMatch)
         }
     }
 }

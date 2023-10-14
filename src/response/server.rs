@@ -71,11 +71,14 @@ impl HTTPServerResponse {
         let version = version.to_string();
         let body = String::from_utf8_lossy(&body);
         let header = header.into_iter()
-            .map(|(key,value)| format!("{}:{}",key,value))
+            .map(|(key,value)| format!("{}:{};\r\n",key,value))
             .collect::<Vec<String>>()
-            .concat();
+            .concat()
+            .trim()
+            .parse::<String>()
+            .unwrap();
         
-        format!("{} {}\r\n{}\r\n{}",version,method,header,body)
+        format!("{} {}\r\n{}\r\n{}", version, method, header, body)
     }
     
     pub fn http_bytes(self) -> Vec<u8>{

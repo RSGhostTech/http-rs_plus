@@ -52,7 +52,18 @@ impl HTTPClientResponseBuilder {
     
     pub fn build(self) -> Option<HTTPClientResponse>{
         if let Ok(response) = String::from_utf8(self.cache) {
-            todo!()
-        }else { None }
+            let space = response.split_whitespace();
+            /*
+            GET / HTTP/1.1
+            Host: 127.0.0.1:8000
+            ...
+            */
+            if space.clone().count() < 3 {
+                return None
+            }
+            
+            let method = HTTPClientMethod::from_raw(space.next().unwrap().as_bytes())
+        }
+        None
     }
 }

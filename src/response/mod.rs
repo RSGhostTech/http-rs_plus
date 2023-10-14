@@ -89,14 +89,19 @@ impl ResponseBuilder{
     }
 }
 
-pub trait HTTPBytes {
+pub trait HTTPBytes{
     fn vec_u8(&self) -> Vec<u8>;
+    fn string(&self) -> String;
 }
 
 impl HTTPBytes for String{
     fn vec_u8(&self) -> Vec<u8> {
         self.bytes()
             .collect()
+    }
+    
+    fn string(&self) -> String {
+        self.clone()
     }
 }
 
@@ -105,17 +110,33 @@ impl HTTPBytes for &str{
         self.bytes()
             .collect()
     }
+    
+    fn string(&self) -> String {
+        self.to_string()
+    }
 }
 
 impl HTTPBytes for [u8]{
     fn vec_u8(&self) -> Vec<u8> {
         self.to_vec()
     }
+    fn string(&self) -> String {
+        unsafe {
+            String::from_utf8_unchecked(self.to_vec())
+        }
+    }
 }
+
 
 impl HTTPBytes for Vec<u8>{
     fn vec_u8(&self) -> Vec<u8> {
         self.clone()
+    }
+    
+    fn string(&self) -> String {
+        unsafe {
+            String::from_utf8_unchecked(self.clone())
+        }
     }
 }
 
