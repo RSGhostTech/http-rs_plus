@@ -6,7 +6,6 @@
 
 - Safely and quickly
 - Easy apis
-- Resource Route(Preview)
 
 ---
 
