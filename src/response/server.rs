@@ -70,11 +70,16 @@ impl HTTPServerResponse {
         let method = method.to_string();
         let version = version.to_string();
         let body = String::from_utf8_lossy(&body);
-        let header = header.into_iter()
+        
+        //Header迭代器优化
+        let header_iter = header.into_iter()
             .map(|(key,value)| format!("{}:{};\r\n",key,value))
-            .collect::<Vec<String>>()
-            .concat()
-            .trim()
+            .collect::<Vec<String>>();
+        let mut header = String::new();
+        for i in header_iter {
+            header.push_str(&i)
+        }
+        let header = header.trim()
             .parse::<String>()
             .unwrap();
         

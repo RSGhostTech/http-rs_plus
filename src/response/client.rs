@@ -60,6 +60,26 @@ impl HTTPClientResponse {
     pub fn body_mut(&mut self) -> &mut Vec<u8>{
         &mut self.response.body
     }
+    
+    pub fn http(self) -> String{
+        //header迭代器优化
+        let header_iter = self.response.header
+            .map(|(k,v)| format!("{}:{}\r\n",k,v))
+            .collect::<Vec<String>>();
+        let mut header = String::new();
+        for i in header_iter {
+            header.push_str(&i)
+        }
+        let header = header.trim()
+            .parse::<String>()
+            .unwrap();
+        
+        let method = self.method.to_string();
+        let resource = self.resource;
+        let version = self.response.version.to_string();
+        let body = String::from_utf8_lossy(&self.response.body);
+        format!("{} {} {}\r\n{}\r\n{}",method,resource,version,header,body)
+    }
 }
 
 #[derive(Clone,Debug,Default)]
@@ -95,7 +115,7 @@ impl HTTPClientResponseBuilder {
             GET / HTTP/1.1
             Host: 127.0.0.1:8000
             
-            xxxxxx
+            <dir>w</dir>
             */
             
             //第一行的方法行
@@ -176,6 +196,7 @@ impl HTTPClientResponseBuilder {
 
 #[cfg(test)]
 mod test{
+    use std::time::{Duration, Instant};
     use crate::response::client::HTTPClientResponseBuilder;
     
     #[test]
@@ -206,5 +227,25 @@ mod test{
         println!("Resource:{:?}",source);
         println!("Header:{:?}",header);
         println!("Body:{:?}",response_body);
+    }
+    
+    #[test]
+    fn a(){
+        let time = Instant::now();
+        let client = HTTPClientResponseBuilder::new(
+            String::from(
+                "POST w/xp HTTP/2
+                    Host: 127.0.0.1:8000
+                    Hostd: 127.0.0.1:8000
+            
+                    xxxxxx
+                    w"
+            )
+                .bytes()
+                .collect()
+        ).build().unwrap();
+        let time = time.elapsed();
+        println!("{}",client.http());
+        println!("Time :{:.4}",time.as_micros() as f64 / 1000.0)
     }
 }
